@@ -14,13 +14,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r loadData}
 
 library(readr)
-S_and_P_dataset <- read_csv("^GSPC.csv")
+SP_dataset <- read_csv("^GSPC.csv")
 
 library(readr)
-Dow_Jones_dataset <- read_csv("^DJI.csv")
+DJ_dataset <- read_csv("^DJI.csv")
 
 library(readr)
-Nasdaq_dataset <- read_csv("^GSPC.csv")
+Nas_dataset <- read_csv("^GSPC.csv")
 
 ```
 
@@ -30,5 +30,82 @@ Nasdaq_dataset <- read_csv("^GSPC.csv")
 ```{r loadPackages}
 
 library('dplyr')
+library('tidyverse')
 
 ```
+
+
+##Wrangle Data
+
+```{r}
+
+fixed_DJ_dataset <- DJ_dataset %>%
+  separate (Date, c("month","day","year"))
+
+final_DJ_dataset <- fixed_DJ_dataset %>%
+  group_by(month) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Open), .groups = 'rowwise')
+
+```
+
+```{r}
+
+fixed_SP_dataset <- SP_dataset %>%
+  separate (Date, c("month","day","year"))
+
+final_SP_dataset <- fixed_SP_dataset %>%
+  group_by(month) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Open), .groups = 'rowwise')
+
+```
+
+```{r}
+
+fixed_Nas_dataset <- Nas_dataset %>%
+  separate (Date, c("month","day","year"))
+
+final_Nas_dataset <- fixed_Nas_dataset %>%
+  group_by(month) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Open), .groups = 'rowwise')
+
+```
+
+
+## Test Plots
+
+```{r}
+
+ggplot(final_DJ_dataset, aes(MonthlyOpenAverage,MonthlyAdjCloseAverage))+
+  geom_point()
+
+```
+
+```{r}
+
+ggplot(final_SP_dataset, aes(MonthlyOpenAverage,MonthlyAdjCloseAverage))+
+  geom_point()
+
+```
+
+```{r}
+
+ggplot(final_Nas_dataset, aes(MonthlyOpenAverage,MonthlyAdjCloseAverage))+
+  geom_point()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
