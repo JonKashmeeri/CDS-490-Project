@@ -1,0 +1,265 @@
+---
+title: "S&P Hypothesis Testing"
+author: "Jon Kashmeeri"
+date: "3/24/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Research Question
+COVID 19 is affecting different sectors of the economy differently, in turn, causing many of the stock indexes on the market to fluctuate. For this research project, I  will be specifically testing the S&P 500 index compared to some of its subsections, in order see if their relationships are relevant. (the subsections are: communications, technologies, finance, and health care)
+
+
+
+## Load Data
+
+```{r loadData}
+
+library(readr)
+
+SP_500_dataset <- read_csv("^GSPC.csv")
+
+SP_Comm_dataset <- read_csv("XLC.csv")
+
+SP_Tech_dataset <- read_csv("XLK.csv")
+
+SP_Fnan_dataset <- read_csv("XLF.csv")
+
+SP_Health_dataset <- read_csv("XLV.csv")
+
+```
+
+
+## Load Packages
+
+```{r loadPackages}
+
+library('dplyr')
+library('tidyverse')
+library('TTR')
+```
+
+
+##Wrangle Data
+
+```{r}
+
+fixed_500_dataset <- SP_500_dataset %>%
+  separate (Date, c("month","day","year"))
+
+fixed_500_dataset <- fixed_500_dataset %>%
+  group_by(fixed_500_dataset[1]) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Volume))
+
+```
+
+```{r}
+
+fixed_Comm_dataset <- SP_Comm_dataset %>%
+  separate (Date, c("month","day","year"))
+
+fixed_Comm_dataset <- fixed_Comm_dataset %>%
+  group_by(fixed_Comm_dataset[1]) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Volume))
+
+
+```
+
+```{r}
+
+fixed_Tech_dataset <- SP_Tech_dataset %>%
+  separate (Date, c("month","day","year"))
+
+fixed_Tech_dataset <- fixed_Tech_dataset %>%
+  group_by(fixed_Tech_dataset[1]) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Volume))
+
+```
+
+```{r}
+
+fixed_Fnan_dataset <- SP_Fnan_dataset %>%
+  separate (Date, c("month","day","year"))
+
+fixed_Fnan_dataset <- fixed_Fnan_dataset %>%
+  group_by(fixed_Fnan_dataset[1]) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Volume))
+
+```
+
+```{r}
+
+fixed_Health_dataset <- SP_Health_dataset %>%
+  separate (Date, c("month","day","year"))
+
+fixed_Health_dataset <- fixed_Health_dataset %>%
+  group_by(fixed_Health_dataset[1]) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Volume))
+
+```
+
+
+## Normalizing data
+
+```{r}
+normalized_500_dataset <- fixed_500_dataset %>%
+  select(month, MonthlyOpenAverage, MonthlyAdjCloseAverage, MonthlyMaxHigh, MonthlyMinLow, MonthlyVolumeAverage) 
+
+normalized_500_dataset$month <- as.numeric(normalized_500_dataset$month)
+normalized_500_dataset$NormalOpen <- ((normalized_500_dataset$MonthlyOpenAverage/normalized_500_dataset$MonthlyOpenAverage[1])*100)
+normalized_500_dataset$NormalClose <- ((normalized_500_dataset$MonthlyAdjCloseAverage/normalized_500_dataset$MonthlyAdjCloseAverage[1])*100)
+normalized_500_dataset$NormalHigh <- ((normalized_500_dataset$MonthlyMaxHigh/normalized_500_dataset$MonthlyMaxHigh[1])*100)
+normalized_500_dataset$NormalLow <- ((normalized_500_dataset$MonthlyMinLow/normalized_500_dataset$MonthlyMinLow[1])*100)
+normalized_500_dataset$NormalVolume <- ((normalized_500_dataset$MonthlyVolumeAverage/normalized_500_dataset$MonthlyVolumeAverage[1])*100)
+
+normalized_500_dataset <- normalized_500_dataset %>%
+  select(1,7:11)
+
+```
+
+```{r}
+normalized_Comm_dataset <- fixed_Comm_dataset %>%
+  select(month, MonthlyOpenAverage, MonthlyAdjCloseAverage, MonthlyMaxHigh, MonthlyMinLow, MonthlyVolumeAverage) 
+
+normalized_Comm_dataset$month <- as.numeric(normalized_Comm_dataset$month)
+normalized_Comm_dataset$NormalOpen <- ((normalized_Comm_dataset$MonthlyOpenAverage/normalized_Comm_dataset$MonthlyOpenAverage[1])*100)
+normalized_Comm_dataset$NormalClose <- ((normalized_Comm_dataset$MonthlyAdjCloseAverage/normalized_Comm_dataset$MonthlyAdjCloseAverage[1])*100)
+normalized_Comm_dataset$NormalHigh <- ((normalized_Comm_dataset$MonthlyMaxHigh/normalized_Comm_dataset$MonthlyMaxHigh[1])*100)
+normalized_Comm_dataset$NormalLow <- ((normalized_Comm_dataset$MonthlyMinLow/normalized_Comm_dataset$MonthlyMinLow[1])*100)
+normalized_Comm_dataset$NormalVolume <- ((normalized_Comm_dataset$MonthlyVolumeAverage/normalized_Comm_dataset$MonthlyVolumeAverage[1])*100)
+
+normalized_Comm_dataset <- normalized_Comm_dataset %>%
+  select(1,7:11)
+
+```
+
+```{r}
+normalized_Tech_dataset <- fixed_Tech_dataset %>%
+  select(month, MonthlyOpenAverage, MonthlyAdjCloseAverage, MonthlyMaxHigh, MonthlyMinLow, MonthlyVolumeAverage) 
+
+normalized_Tech_dataset$month <- as.numeric(normalized_Tech_dataset$month)
+normalized_Tech_dataset$NormalOpen <- ((normalized_Tech_dataset$MonthlyOpenAverage/normalized_Tech_dataset$MonthlyOpenAverage[1])*100)
+normalized_Tech_dataset$NormalClose <- ((normalized_Tech_dataset$MonthlyAdjCloseAverage/normalized_Tech_dataset$MonthlyAdjCloseAverage[1])*100)
+normalized_Tech_dataset$NormalHigh <- ((normalized_Tech_dataset$MonthlyMaxHigh/normalized_Tech_dataset$MonthlyMaxHigh[1])*100)
+normalized_Tech_dataset$NormalLow <- ((normalized_Tech_dataset$MonthlyMinLow/normalized_Tech_dataset$MonthlyMinLow[1])*100)
+normalized_Tech_dataset$NormalVolume <- ((normalized_Tech_dataset$MonthlyVolumeAverage/normalized_Tech_dataset$MonthlyVolumeAverage[1])*100)
+
+normalized_Tech_dataset <- normalized_Tech_dataset %>%
+  select(1,7:11)
+
+```
+
+```{r}
+normalized_Fnan_dataset <- fixed_Fnan_dataset %>%
+  select(month, MonthlyOpenAverage, MonthlyAdjCloseAverage, MonthlyMaxHigh, MonthlyMinLow, MonthlyVolumeAverage) 
+
+normalized_Fnan_dataset$month <- as.numeric(normalized_Fnan_dataset$month)
+normalized_Fnan_dataset$NormalOpen <- ((normalized_Fnan_dataset$MonthlyOpenAverage/normalized_Fnan_dataset$MonthlyOpenAverage[1])*100)
+normalized_Fnan_dataset$NormalClose <- ((normalized_Fnan_dataset$MonthlyAdjCloseAverage/normalized_Fnan_dataset$MonthlyAdjCloseAverage[1])*100)
+normalized_Fnan_dataset$NormalHigh <- ((normalized_Fnan_dataset$MonthlyMaxHigh/normalized_Fnan_dataset$MonthlyMaxHigh[1])*100)
+normalized_Fnan_dataset$NormalLow <- ((normalized_Fnan_dataset$MonthlyMinLow/normalized_Fnan_dataset$MonthlyMinLow[1])*100)
+normalized_Fnan_dataset$NormalVolume <- ((normalized_Fnan_dataset$MonthlyVolumeAverage/normalized_Fnan_dataset$MonthlyVolumeAverage[1])*100)
+
+normalized_Fnan_dataset <- normalized_Fnan_dataset %>%
+  select(1,7:11)
+
+```
+
+```{r}
+normalized_Health_dataset <- fixed_Health_dataset %>%
+  select(month, MonthlyOpenAverage, MonthlyAdjCloseAverage, MonthlyMaxHigh, MonthlyMinLow, MonthlyVolumeAverage) 
+
+normalized_Health_dataset$month <- as.numeric(normalized_Health_dataset$month)
+normalized_Health_dataset$NormalOpen <- ((normalized_Health_dataset$MonthlyOpenAverage/normalized_Health_dataset$MonthlyOpenAverage[1])*100)
+normalized_Health_dataset$NormalClose <- ((normalized_Health_dataset$MonthlyAdjCloseAverage/normalized_Health_dataset$MonthlyAdjCloseAverage[1])*100)
+normalized_Health_dataset$NormalHigh <- ((normalized_Health_dataset$MonthlyMaxHigh/normalized_Health_dataset$MonthlyMaxHigh[1])*100)
+normalized_Health_dataset$NormalLow <- ((normalized_Health_dataset$MonthlyMinLow/normalized_Health_dataset$MonthlyMinLow[1])*100)
+normalized_Health_dataset$NormalVolume <- ((normalized_Health_dataset$MonthlyVolumeAverage/normalized_Health_dataset$MonthlyVolumeAverage[1])*100)
+
+normalized_Health_dataset <- normalized_Health_dataset %>%
+  select(1,7:11)
+
+```
+
+
+## Normal Test Plots
+
+```{r}
+ggplot()+
+  geom_point(aes(month,NormalOpen), color= "Red", shape = "circle", data=normalized_500_dataset)+
+  geom_line(aes(month,NormalOpen), color= "Red", data=normalized_500_dataset)+
+  
+  geom_point(aes(month,NormalOpen), color= "Blue", shape = "triangle", data=normalized_Comm_dataset)+
+  geom_line(aes(month,NormalOpen), color= "Blue", data=normalized_Comm_dataset)+
+  
+  geom_point(aes(month,NormalOpen), color= "Green", shape = "square", data=normalized_Tech_dataset)+
+  geom_line(aes(month,NormalOpen), color= "Green", data=normalized_Tech_dataset)+
+  
+  geom_point(aes(month,NormalOpen), color= "Black", shape = "plus", data=normalized_Fnan_dataset)+
+  geom_line(aes(month,NormalOpen), color= "Black", data=normalized_Fnan_dataset)+
+  
+  geom_point(aes(month,NormalOpen), color= "Yellow", shape = "diamond", data=normalized_Health_dataset)+
+  geom_line(aes(month,NormalOpen), color= "Yellow", data=normalized_Health_dataset)
+```
+
+
+## Moving Average Test
+
+```{r}
+SP_500_dataset$MAOpen <- SMA(x = SP_500_dataset$Open,n = 10) 
+ggplot(SP_500_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date), y = Open), color = "Red")+
+  geom_line(mapping = aes(x = as.Date(Date), y = MAOpen), color = "Blue")
+
+```
+
+
+```{r}
+SP_Comm_dataset$MAOpen <- SMA(x = SP_Comm_dataset$Open,n = 10) 
+ggplot(SP_Comm_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date), y = Open), color = "Red")+
+  geom_line(mapping = aes(x = as.Date(Date), y = MAOpen), color = "Blue")
+
+```
+
+
+```{r}
+SP_Tech_dataset$MAOpen <- SMA(x = SP_Tech_dataset$Open,n = 10) 
+ggplot(SP_Tech_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date), y = Open), color = "Red")+
+  geom_line(mapping = aes(x = as.Date(Date), y = MAOpen), color = "Blue")
+
+```
+
+
+```{r}
+SP_Fnan_dataset$MAOpen <- SMA(x = SP_Fnan_dataset$Open,n = 10) 
+ggplot(SP_Fnan_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date), y = Open), color = "Red")+
+  geom_line(mapping = aes(x = as.Date(Date), y = MAOpen), color = "Blue")
+
+```
+
+
+```{r}
+SP_Health_dataset$MAOpen <- SMA(x = SP_Health_dataset$Open,n = 10) 
+ggplot(SP_Health_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date), y = Open), color = "Red")+
+  geom_line(mapping = aes(x = as.Date(Date), y = MAOpen), color = "Blue")
+
+```
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,221 @@
+---
+title: "CDS-490 Project"
+author: "Jon Kashmeeri"
+date: "2/16/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Data
+
+```{r loadData}
+
+library(readr)
+
+SP_dataset <- read_csv("^GSPC.csv")
+
+DJ_dataset <- read_csv("^DJI.csv")
+
+Nas_dataset <- read_csv("^IXIC.csv")
+
+```
+
+
+## Load Packages
+
+```{r loadPackages}
+
+library('dplyr')
+library('tidyverse')
+library('TTR')
+```
+
+
+##Wrangle Data
+
+```{r}
+
+fixed_DJ_dataset <- DJ_dataset %>%
+  separate (Date, c("month","day","year"))
+
+final_DJ_dataset <- fixed_DJ_dataset %>%
+  group_by(month) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Volume))
+
+```
+
+```{r}
+
+fixed_SP_dataset <- SP_dataset %>%
+  separate (Date, c("month","day","year"))
+
+final_SP_dataset <- fixed_SP_dataset %>%
+  group_by(month) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Volume))
+
+```
+
+```{r}
+
+fixed_Nas_dataset <- Nas_dataset %>%
+  separate (Date, c("month","day","year"))
+
+final_Nas_dataset <- fixed_Nas_dataset %>%
+  group_by(month) %>%
+  summarise(MonthlyOpenAverage = mean(Open), MonthlyAdjCloseAverage = mean(`Adj Close`), MonthlyMaxHigh = max(High), MonthlyMinLow = min(Low), MonthlyVolumeAverage = mean(Volume))
+
+```
+
+## Test Plots
+
+```{r}
+
+ggplot(final_DJ_dataset)+
+  geom_point(aes(as.numeric(month),MonthlyOpenAverage), color= "Red")+
+  geom_point(aes(as.numeric(month),MonthlyAdjCloseAverage), color= "Blue")
+
+```
+
+```{r}
+
+ggplot(final_SP_dataset)+
+  geom_point(aes(as.numeric(month),MonthlyOpenAverage), color= "Red")+
+  geom_point(aes(as.numeric(month),MonthlyAdjCloseAverage), color= "Blue")
+
+```
+
+```{r}
+
+ggplot(final_Nas_dataset)+
+  geom_point(aes(as.numeric(month),MonthlyOpenAverage), color= "Red")+
+  geom_point(aes(as.numeric(month),MonthlyAdjCloseAverage), color= "Blue")
+
+```
+
+
+## Normalizing data
+
+Select month 1 values for open/close/min/max/volume then divide in each row by do ((Month n value / Month 1 value)* 100)
+
+```{r}
+normalized_DJ_dataset <- final_DJ_dataset %>%
+  select(month, MonthlyOpenAverage, MonthlyAdjCloseAverage, MonthlyMaxHigh, MonthlyMinLow, MonthlyVolumeAverage) 
+
+normalized_DJ_dataset$month <- as.numeric(normalized_DJ_dataset$month)
+normalized_DJ_dataset$NormalOpen <- ((normalized_DJ_dataset$MonthlyOpenAverage/normalized_DJ_dataset$MonthlyOpenAverage[1])*100)
+normalized_DJ_dataset$NormalClose <- ((normalized_DJ_dataset$MonthlyAdjCloseAverage/normalized_DJ_dataset$MonthlyAdjCloseAverage[1])*100)
+normalized_DJ_dataset$NormalHigh <- ((normalized_DJ_dataset$MonthlyMaxHigh/normalized_DJ_dataset$MonthlyMaxHigh[1])*100)
+normalized_DJ_dataset$NormalLow <- ((normalized_DJ_dataset$MonthlyMinLow/normalized_DJ_dataset$MonthlyMinLow[1])*100)
+normalized_DJ_dataset$NormalVolume <- ((normalized_DJ_dataset$MonthlyVolumeAverage/normalized_DJ_dataset$MonthlyVolumeAverage[1])*100)
+
+normalized_DJ_dataset <- normalized_DJ_dataset %>%
+  select(1,7:11)
+
+```
+
+```{r}
+normalized_SP_dataset <- final_SP_dataset %>%
+  select(month, MonthlyOpenAverage, MonthlyAdjCloseAverage, MonthlyMaxHigh, MonthlyMinLow, MonthlyVolumeAverage) 
+
+normalized_SP_dataset$month <- as.numeric(normalized_SP_dataset$month)
+normalized_SP_dataset$NormalOpen <- ((normalized_SP_dataset$MonthlyOpenAverage/normalized_SP_dataset$MonthlyOpenAverage[1])*100)
+normalized_SP_dataset$NormalClose <- ((normalized_SP_dataset$MonthlyAdjCloseAverage/normalized_SP_dataset$MonthlyAdjCloseAverage[1])*100)
+normalized_SP_dataset$NormalHigh <- ((normalized_SP_dataset$MonthlyMaxHigh/normalized_SP_dataset$MonthlyMaxHigh[1])*100)
+normalized_SP_dataset$NormalLow <- ((normalized_SP_dataset$MonthlyMinLow/normalized_SP_dataset$MonthlyMinLow[1])*100)
+normalized_SP_dataset$NormalVolume <- ((normalized_SP_dataset$MonthlyVolumeAverage/normalized_SP_dataset$MonthlyVolumeAverage[1])*100)
+
+normalized_SP_dataset <- normalized_SP_dataset %>%
+  select(1,7:11)
+
+```
+
+```{r}
+normalized_Nas_dataset <- final_Nas_dataset %>%
+  select(month, MonthlyOpenAverage, MonthlyAdjCloseAverage, MonthlyMaxHigh, MonthlyMinLow, MonthlyVolumeAverage) 
+
+normalized_Nas_dataset$month <- as.numeric(normalized_Nas_dataset$month)
+normalized_Nas_dataset$NormalOpen <- ((normalized_Nas_dataset$MonthlyOpenAverage/normalized_Nas_dataset$MonthlyOpenAverage[1])*100)
+normalized_Nas_dataset$NormalClose <- ((normalized_Nas_dataset$MonthlyAdjCloseAverage/normalized_Nas_dataset$MonthlyAdjCloseAverage[1])*100)
+normalized_Nas_dataset$NormalHigh <- ((normalized_Nas_dataset$MonthlyMaxHigh/normalized_Nas_dataset$MonthlyMaxHigh[1])*100)
+normalized_Nas_dataset$NormalLow <- ((normalized_Nas_dataset$MonthlyMinLow/normalized_Nas_dataset$MonthlyMinLow[1])*100)
+normalized_Nas_dataset$NormalVolume <- ((normalized_Nas_dataset$MonthlyVolumeAverage/normalized_Nas_dataset$MonthlyVolumeAverage[1])*100)
+
+normalized_Nas_dataset <- normalized_Nas_dataset %>%
+  select(1,7:11)
+
+```
+
+
+## Normal Test Plots
+
+```{r}
+ggplot()+
+  geom_point(aes(month,NormalOpen), color= "Red", shape = "circle", data=normalized_DJ_dataset)+
+  geom_line(aes(month,NormalOpen), color= "Red", data=normalized_DJ_dataset)+
+  geom_point(aes(month,NormalOpen), color= "Blue", shape = "triangle", data=normalized_SP_dataset)+
+   geom_line(aes(month,NormalOpen), color= "Blue", data=normalized_SP_dataset)+
+  geom_point(aes(month,NormalOpen), color= "Green", shape = "square", data=normalized_Nas_dataset)+
+   geom_line(aes(month,NormalOpen), color= "Green", data=normalized_Nas_dataset)
+```
+
+
+## Moving Average Packages
+
+```{r}
+library(lubridate)      
+library(fpp2)           
+library(zoo) 
+```
+
+
+## Moving Average Test
+
+```{r}
+DJ_dataset$MAOpen <- SMA(x = DJ_dataset$Open,n = 10) 
+ggplot(DJ_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date), y = Open), color = "Red")+
+  geom_line(mapping = aes(x = as.Date(Date), y = MAOpen), color = "Blue")
+
+```
+
+```{r}
+SP_dataset$MAOpen <- SMA(x = SP_dataset$Open,n = 10) 
+ggplot(SP_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date), y = Open), color = "Red")+
+  geom_line(mapping = aes(x = as.Date(Date), y = MAOpen), color = "Blue")
+
+```
+
+```{r}
+Nas_dataset$MAOpen <- SMA(x = Nas_dataset$Open,n = 10) 
+ggplot(Nas_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date), y = Open), color = "Red")+
+  geom_line(mapping = aes(x = as.Date(Date), y = MAOpen), color = "Blue")
+
+```
+
+
+
+```{r}
+DJ_dataset %>%
+  mutate(ma2 = rollmean(DJ_dataset$Open, k = 2, fill = NA),
+         ma2x4 = ma(DJ_dataset$Open, order = 4, centre = TRUE)) %>%
+  gather(ma, value, ma2:ma2x4)%>%
+  ggplot(aes(x = as.Date(Date))) + 
+  geom_point(aes(y = Open))+
+  geom_line(aes(y = value, color = ma)) 
+```  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
