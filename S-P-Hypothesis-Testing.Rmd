@@ -1,0 +1,433 @@
+---
+title: "S&P Hypothesis Testing"
+author: "Jon Kashmeeri"
+date: "3/24/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Research Question
+
+Shortly after the year 2020 began, a disease named COVID-19 began spreading across the globe like wildfire, changing the world in the process. COVID 19 affected multiple sectors of the economy differently, in turn, causing many of the stock indexes in the market to fluctuate. As a Finance major, this sudden change in the market peaked my interest and made me want to conduct further analyses. I wanted to look at stock indexes and their subsections to see if the market changes from Feb 2020 to Feb 2021 caused ripple effects through all subsections. For this research project, I  will be specifically testing the S&P 500 index compared to some of its subsections, in order see if their relationships are relevant, describing if changes in one section results in changes in another. (the subsections are: communications, technologies, finance, and health care)
+
+
+## Load Packages
+
+In this part, I loaded in all the packages I will be using for this project. (Includes 'readr', 'dplyr', 'tidyverse', 'TTR', 'ggpubr' and 'rstatix')
+```{r, include=FALSE}
+
+library('readr')
+library('dplyr')
+library('tidyverse')
+library('TTR')
+library(base64)
+options(warn=-1)
+
+library('ggpubr')
+library('rstatix')
+```
+
+
+## Load Data
+
+In this part, I imported all of my stock data from excel using the 'readr' package.
+```{r loadData, include=FALSE}
+
+SP_500_dataset <- read_csv("^GSPC.csv")
+
+SP_Comm_dataset <- read_csv("XLC.csv")
+
+SP_Tech_dataset <- read_csv("XLK.csv")
+
+SP_Fnan_dataset <- read_csv("XLF.csv")
+
+SP_Health_dataset <- read_csv("XLV.csv")
+
+```
+
+
+## Wrangle Data
+
+In this part, I start to manipulate the data for each dataset by first making a copy of the "Date" column and naming it "Date2". I then proceeded to separate the "Date2" column by "month", "day", and "year". With "Date2" separated, I united the columns in the order of "year", "month", and "day", naming it "Date_id". During these steps, I makes sure to continuously assign the alterations to a new specific dataset. The purpose of these changes are needed to properly graph the data in each section chronologically. 
+```{r, include=FALSE}
+SP_500_dataset <- SP_500_dataset %>%
+  mutate(Date2 = Date)
+
+
+fixed_500_dataset <- SP_500_dataset %>%
+  separate (Date2, c("month","day","year"))
+
+fixed_500_dataset <- fixed_500_dataset %>%
+  unite("Date_id", `year`, `month`, `day`, sep = "-")
+
+```
+
+```{r, include=FALSE}
+SP_Comm_dataset <- SP_Comm_dataset %>%
+  mutate(Date2 = Date)
+
+
+fixed_Comm_dataset <- SP_Comm_dataset %>%
+  separate (Date2, c("month","day","year"))
+
+fixed_Comm_dataset <- fixed_Comm_dataset %>%
+  unite("Date_id", `year`, `month`, `day`, sep = "-")
+
+```
+
+```{r, include=FALSE}
+
+SP_Tech_dataset <- SP_Tech_dataset %>%
+  mutate(Date2 = Date)
+
+
+fixed_Tech_dataset <- SP_Tech_dataset %>%
+  separate (Date2, c("month","day","year"))
+
+fixed_Tech_dataset <- fixed_Tech_dataset %>%
+  unite("Date_id", `year`, `month`, `day`, sep = "-")
+
+```
+
+```{r, include=FALSE}
+SP_Fnan_dataset <- SP_Fnan_dataset %>%
+  mutate(Date2 = Date)
+
+
+fixed_Fnan_dataset <- SP_Fnan_dataset %>%
+  separate (Date2, c("month","day","year"))
+
+fixed_Fnan_dataset <- fixed_Fnan_dataset %>%
+  unite("Date_id", `year`, `month`, `day`, sep = "-")
+
+```
+
+```{r, include=FALSE}
+SP_Health_dataset <- SP_Health_dataset %>%
+  mutate(Date2 = Date)
+
+
+fixed_Health_dataset <- SP_Health_dataset %>%
+  separate (Date2, c("month","day","year"))
+
+fixed_Health_dataset <- fixed_Health_dataset %>%
+  unite("Date_id", `year`, `month`, `day`, sep = "-")
+
+```
+
+
+## Normalizing data
+
+In this part, I take the previously wrangled datasets and normalize the data values within each one. I start off by selecting the "Date", "Open", "Adj Close", "High", "Low", "Volume", and "Date_id" columns to create new datasets. Then I create new normalized columns for "Open", "Adj Close", "High", "Low", and "Volume" by dividing every value in each column by the value in row one, and then multiply by one hundred. The purpose of these calculations is that they scale all the sections to the same degree, making it easier to conduct analyses.
+```{r, include=FALSE}
+normalized_500_dataset <- fixed_500_dataset %>%
+  select(Date, `Open`, `Adj Close`, `High`, `Low`, `Volume`,`Date_id`) 
+
+normalized_500_dataset$NormalOpen <- ((normalized_500_dataset$Open/normalized_500_dataset$Open[1])*100)
+normalized_500_dataset$NormalClose <- ((normalized_500_dataset$`Adj Close`/normalized_500_dataset$`Adj Close`[1])*100)
+normalized_500_dataset$NormalHigh <- ((normalized_500_dataset$High/normalized_500_dataset$High[1])*100)
+normalized_500_dataset$NormalLow <- ((normalized_500_dataset$Low/normalized_500_dataset$Low[1])*100)
+normalized_500_dataset$NormalVolume <- ((normalized_500_dataset$Volume/normalized_500_dataset$Volume[1])*100)
+
+normalized_500_dataset <- normalized_500_dataset %>%
+  select(7:12)
+
+```
+
+```{r, include=FALSE}
+normalized_Comm_dataset <- fixed_Comm_dataset %>%
+  select(Date, `Open`, `Adj Close`, `High`, `Low`, `Volume`, `Date_id`) 
+
+normalized_Comm_dataset$NormalOpen <- ((normalized_Comm_dataset$Open/normalized_Comm_dataset$Open[1])*100)
+normalized_Comm_dataset$NormalClose <- ((normalized_Comm_dataset$`Adj Close`/normalized_Comm_dataset$`Adj Close`[1])*100)
+normalized_Comm_dataset$NormalHigh <- ((normalized_Comm_dataset$High/normalized_Comm_dataset$High[1])*100)
+normalized_Comm_dataset$NormalLow <- ((normalized_Comm_dataset$Low/normalized_Comm_dataset$Low[1])*100)
+normalized_Comm_dataset$NormalVolume <- ((normalized_Comm_dataset$Volume/normalized_Comm_dataset$Volume[1])*100)
+
+normalized_Comm_dataset <- normalized_Comm_dataset %>%
+  select(7:12)
+
+```
+
+```{r, include=FALSE}
+normalized_Tech_dataset <- fixed_Tech_dataset %>%
+  select(Date, `Open`, `Adj Close`, `High`, `Low`, `Volume`, `Date_id`) 
+
+normalized_Tech_dataset$NormalOpen <- ((normalized_Tech_dataset$Open/normalized_Tech_dataset$Open[1])*100)
+normalized_Tech_dataset$NormalClose <- ((normalized_Tech_dataset$`Adj Close`/normalized_Tech_dataset$`Adj Close`[1])*100)
+normalized_Tech_dataset$NormalHigh <- ((normalized_Tech_dataset$High/normalized_Tech_dataset$High[1])*100)
+normalized_Tech_dataset$NormalLow <- ((normalized_Tech_dataset$Low/normalized_Tech_dataset$Low[1])*100)
+normalized_Tech_dataset$NormalVolume <- ((normalized_Tech_dataset$Volume/normalized_Tech_dataset$Volume[1])*100)
+
+normalized_Tech_dataset <- normalized_Tech_dataset %>%
+  select(7:12)
+
+```
+
+```{r, include=FALSE}
+normalized_Fnan_dataset <- fixed_Fnan_dataset %>%
+  select(Date, `Open`, `Adj Close`, `High`, `Low`, `Volume`, `Date_id`) 
+
+normalized_Fnan_dataset$NormalOpen <- ((normalized_Fnan_dataset$Open/normalized_Fnan_dataset$Open[1])*100)
+normalized_Fnan_dataset$NormalClose <- ((normalized_Fnan_dataset$`Adj Close`/normalized_Fnan_dataset$`Adj Close`[1])*100)
+normalized_Fnan_dataset$NormalHigh <- ((normalized_Fnan_dataset$High/normalized_Fnan_dataset$High[1])*100)
+normalized_Fnan_dataset$NormalLow <- ((normalized_Fnan_dataset$Low/normalized_Fnan_dataset$Low[1])*100)
+normalized_Fnan_dataset$NormalVolume <- ((normalized_Fnan_dataset$Volume/normalized_Fnan_dataset$Volume[1])*100)
+
+normalized_Fnan_dataset <- normalized_Fnan_dataset %>%
+  select(7:12)
+
+```
+
+```{r, include=FALSE}
+normalized_Health_dataset <- fixed_Health_dataset %>%
+  select(Date, `Open`, `Adj Close`, `High`, `Low`, `Volume`, `Date_id`) 
+
+normalized_Health_dataset$NormalOpen <- ((normalized_Health_dataset$Open/normalized_Health_dataset$Open[1])*100)
+normalized_Health_dataset$NormalClose <- ((normalized_Health_dataset$`Adj Close`/normalized_Health_dataset$`Adj Close`[1])*100)
+normalized_Health_dataset$NormalHigh <- ((normalized_Health_dataset$High/normalized_Health_dataset$High[1])*100)
+normalized_Health_dataset$NormalLow <- ((normalized_Health_dataset$Low/normalized_Health_dataset$Low[1])*100)
+normalized_Health_dataset$NormalVolume <- ((normalized_Health_dataset$Volume/normalized_Health_dataset$Volume[1])*100)
+
+normalized_Health_dataset <- normalized_Health_dataset %>%
+  select(7:12)
+
+```
+
+\newpage
+
+## Normal Test Plots
+
+In this part, I make a graph depicting all the "NormalOpen" data chronologically. I used geom_point and geom_line for each column, with a variety of colors to further differentiated each section. I also included a Legend, graph title, and axis titles. 
+
+```{r, echo=FALSE}
+ggplot()+
+  geom_point(aes(as.Date(Date_id),NormalOpen, color= "Normal 500"), data=normalized_500_dataset)+
+  geom_line(aes(as.Date(Date_id),NormalOpen, color= "Normal 500"), data=normalized_500_dataset)+
+  
+  geom_point(aes(as.Date(Date_id),NormalOpen, color= "Normal Comm"), data=normalized_Comm_dataset)+
+  geom_line(aes(as.Date(Date_id),NormalOpen, color= "Normal Comm"), data=normalized_Comm_dataset)+ 
+ 
+  geom_point(aes(as.Date(Date_id),NormalOpen, color= "Normal Tech"), data=normalized_Tech_dataset)+
+  geom_line(aes(as.Date(Date_id),NormalOpen, color= "Normal Tech"), data=normalized_Tech_dataset)+
+  
+  geom_point(aes(as.Date(Date_id),NormalOpen, color= "Normal Fnan"), data=normalized_Fnan_dataset)+
+  geom_line(aes(as.Date(Date_id),NormalOpen, color= "Normal Fnan"), data=normalized_Fnan_dataset)+
+  
+  geom_point(aes(as.Date(Date_id),NormalOpen, color= "Normal Health"), data=normalized_Health_dataset)+
+  geom_line(aes(as.Date(Date_id),NormalOpen, color= "Normal Health"), data=normalized_Health_dataset)+
+  
+  
+  labs(title = "All Daily NormalOpens", x = "Time")+
+  labs(color="Stock Indexes") 
+  
+```
+
+\newpage
+  
+## Moving Average Test
+
+In this part, I create a new column in the normalized 500 dataset named "MAOpen" by using the SMA function in the 'TTR' package. The SMA function creates a ten day moving average of the "NormalOpen", further smoothing out data. I then created a geom_line plot for both the "NormalOpen" and "MAOpen" chronologically to see how they would match up. * I then repeat this process for each section below *
+```{r, echo=FALSE}
+normalized_500_dataset$MAOpen <- SMA(x = normalized_500_dataset$NormalOpen,n = 10) 
+
+ggplot(normalized_500_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date_id), y = NormalOpen, color = "Normal S&P 500"))+
+  geom_line(mapping = aes(x = as.Date(Date_id), y = MAOpen, color = "Moving Average"))+
+  labs(title = "Smoothing Out Daily Data With 10-Day Moving Average for S&P 500", x = "Time", y = "Open")+
+  labs(color="Data Type") 
+
+```
+
+```{r, echo=FALSE}
+normalized_Comm_dataset$MAOpen <- SMA(x = normalized_Comm_dataset$NormalOpen,n = 10) 
+
+ggplot(normalized_Comm_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date_id), y = NormalOpen, color = "Normal S&P Comm"))+
+  geom_line(mapping = aes(x = as.Date(Date_id), y = MAOpen, color = "Moving Average"))+
+  labs(title = "Smoothing Out Daily Data With 10-Day Moving Average for S&P Comm", x = "Time", y = "Open", colors = "Legends")+
+  labs(color="Data Type") 
+
+```
+
+```{r, echo=FALSE}
+normalized_Tech_dataset$MAOpen <- SMA(x = normalized_Tech_dataset$NormalOpen,n = 10) 
+
+ggplot(normalized_Tech_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date_id), y = NormalOpen, color = "Normal S&P Tech"))+
+  geom_line(mapping = aes(x = as.Date(Date_id), y = MAOpen, color = "Moving Average"))+
+  labs(title = "Smoothing Out Daily Data With 10-Day Moving Average for S&P Tech", x = "Time", y = "Open", colors = "Legends")+
+  labs(color="Data Type") 
+
+```
+
+```{r, echo=FALSE}
+normalized_Fnan_dataset$MAOpen <- SMA(x = normalized_Fnan_dataset$NormalOpen,n = 10) 
+
+ggplot(normalized_Fnan_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date_id), y = NormalOpen, color = "Normal S&P Fnan"))+
+  geom_line(mapping = aes(x = as.Date(Date_id), y = MAOpen, color = "Moving Average"))+
+  labs(title = "Smoothing Out Daily Data With 10-Day Moving Average for S&P Fnan", x = "Time", y = "Open", colors = "Legends")+
+  labs(color="Data Type") 
+
+```
+
+```{r, echo=FALSE}
+normalized_Health_dataset$MAOpen <- SMA(x = normalized_Health_dataset$NormalOpen,n = 10) 
+
+ggplot(normalized_Health_dataset)+
+  geom_line(mapping = aes(x = as.Date(Date_id), y = NormalOpen, color = "Normal S&P Health"))+
+  geom_line(mapping = aes(x = as.Date(Date_id), y = MAOpen, color = "Moving Average"))+
+  labs(title = "Smoothing Out Daily Data With 10-Day Moving Average for S&P Health", x = "Time", y = "Open", colors = "Legends")+
+  labs(color="Data Type") 
+
+```
+
+\newpage
+
+## Data Grouping 
+
+In this part, I make a dataset named "AllOpen", which contains all "NormalOpen" and "MAOpen" columns across all data sets. I did just to make is easier to be able to extract all Open type of data, this then can be manipulated for any of the other four data columns taken from the stock index data.
+```{r, include=FALSE}
+AllOpens <- normalized_500_dataset %>%
+  select(NormalOpen) 
+  AllOpens$SP_500_NormalOpen <- normalized_500_dataset$NormalOpen 
+AllOpens <- AllOpens %>%
+  select(-NormalOpen)
+
+AllOpens[2] <- normalized_Comm_dataset %>%
+  select(NormalOpen) 
+  AllOpens$SP_Comm_NormalOpen <- normalized_Comm_dataset$NormalOpen 
+AllOpens <- AllOpens %>%
+  select(-NormalOpen)
+
+AllOpens[3] <- normalized_Tech_dataset %>%
+  select(NormalOpen) 
+  AllOpens$SP_Tech_NormalOpen <- normalized_Tech_dataset$NormalOpen 
+AllOpens <- AllOpens %>%
+  select(-NormalOpen)
+
+AllOpens[4] <- normalized_Fnan_dataset %>%
+  select(NormalOpen) 
+  AllOpens$SP_Fnan_NormalOpen <- normalized_Fnan_dataset$NormalOpen 
+AllOpens <- AllOpens %>%
+  select(-NormalOpen)
+
+AllOpens[5] <- normalized_Health_dataset %>%
+  select(NormalOpen) 
+  AllOpens$SP_Health_NormalOpen <- normalized_Health_dataset$NormalOpen 
+AllOpens <- AllOpens %>%
+  select(-NormalOpen)
+
+
+
+AllOpens[6] <- normalized_500_dataset %>%
+  select(MAOpen) 
+  AllOpens$normalized_500_MAOpen <- normalized_500_dataset$MAOpen 
+AllOpens <- AllOpens %>%
+  select(-MAOpen)
+
+AllOpens[7] <- normalized_Comm_dataset %>%
+  select(MAOpen) 
+  AllOpens$normalized_Comm_MAOpen <- normalized_Comm_dataset$MAOpen 
+AllOpens <- AllOpens %>%
+  select(-MAOpen)
+
+AllOpens[8] <- normalized_Tech_dataset %>%
+  select(MAOpen) 
+  AllOpens$normalized_Tech_MAOpen <-normalized_Tech_dataset$MAOpen 
+AllOpens <- AllOpens %>%
+  select(-MAOpen)
+
+AllOpens[9] <- normalized_Fnan_dataset %>%
+  select(MAOpen) 
+  AllOpens$normalized_Fnan_MAOpen <-normalized_Fnan_dataset$MAOpen 
+AllOpens <- AllOpens %>%
+  select(-MAOpen)
+
+AllOpens[10] <- normalized_Health_dataset %>%
+  select(MAOpen) 
+  AllOpens$normalized_Health_MAOpen <-normalized_Health_dataset$MAOpen 
+AllOpens <- AllOpens %>%
+  select(-MAOpen)
+
+```
+
+
+## Metrics Calculator
+
+In this part, I added a section where the mean and standard deviation can be calculated for any normalized or MA columns. I added this part to learn a little bit about R basic statistic capabilities and also have this calculator available if someone wanted to check calculations by hand.
+```{r}
+m1<- mean(AllOpens$normalized_500_MAOpen, na.rm = TRUE)
+m2 <- mean(AllOpens$normalized_Comm_MAOpen, na.rm = TRUE)
+```
+```{r,echo=FALSE}
+cat("The Normalized mean is", m1)
+```
+```{r,echo=FALSE}
+cat("The Moving average mean is", m2)
+```
+
+```{r}
+sd1<- sd(AllOpens$normalized_500_MAOpen, na.rm = TRUE)
+sd2 <- sd(AllOpens$normalized_Comm_MAOpen, na.rm = TRUE)
+```
+```{r,echo=FALSE}
+cat("The Normalized standard deviation is", sd1)
+```
+```{r,echo=FALSE}
+cat("The Moving average standard deviation is", sd2)
+```
+
+\newpage
+
+## T-Tests
+
+In this part, I completed a t-test between two sections for every combination of sections based on MAOpen. I decided on using t-tests as they are able to compare two sections against one another and see if there is significant differences between the two. The null hypothesis for this test being that there is no relationship and the alternative being that there is a relationship between entered section. Tests are conducted at a 95 percent confidence level, with a threshold p-value of .05 .
+After completion, printed out p-value results for all tests are entered in a grid. 
+```{r, include=FALSE}
+SP500vsComm <- t.test(AllOpens$normalized_500_MAOpen, AllOpens$normalized_Comm_MAOpen, na.rm = TRUE)
+SP500vsTech <-t.test(AllOpens$normalized_500_MAOpen, AllOpens$normalized_Tech_MAOpen, na.rm = TRUE)
+SP500vsFnan <-t.test(AllOpens$normalized_500_MAOpen, AllOpens$normalized_Fnan_MAOpen, na.rm = TRUE)
+SP500vsHealth <-t.test(AllOpens$normalized_500_MAOpen, AllOpens$normalized_Health_MAOpen, na.rm = TRUE)
+
+CommvsTech <-t.test(AllOpens$normalized_Comm_MAOpen, AllOpens$normalized_Tech_MAOpen, na.rm = TRUE)
+CommvsFnan <-t.test(AllOpens$normalized_Comm_MAOpen, AllOpens$normalized_Fnan_MAOpen, na.rm = TRUE)
+CommvsHealth <-t.test(AllOpens$normalized_Comm_MAOpen, AllOpens$normalized_Health_MAOpen, na.rm = TRUE)
+
+TechvsFnan <-t.test(AllOpens$normalized_Tech_MAOpen, AllOpens$normalized_Fnan_MAOpen, na.rm = TRUE)
+TechvsHealth <-t.test(AllOpens$normalized_Tech_MAOpen, AllOpens$normalized_Health_MAOpen, na.rm = TRUE)
+
+FnanvsHealth <-t.test(AllOpens$normalized_Fnan_MAOpen, AllOpens$normalized_Health_MAOpen, na.rm = TRUE)
+
+```
+
+```{r, echo=FALSE}
+pvaluetable<- data.frame(
+  
+Subsections= c("SP500", "Comm", "Tech", "Fnan", "Health"),
+
+SP500= c("X", SP500vsComm$p.value, SP500vsTech$p.value, SP500vsFnan$p.value, SP500vsHealth$p.value),
+
+Comm= c("X", "X", CommvsTech$p.value, CommvsFnan$p.value, CommvsHealth$p.value),
+
+Tech= c("X", "X", "X", TechvsFnan$p.value, TechvsHealth$p.value),
+
+Fnan= c("X", "X", "X", "X", FnanvsHealth$p.value)
+)
+
+print(knitr::kable(pvaluetable))
+
+```
+
+
+## Conclusion 
+
+After viewing the results, it is clear to see that all sections have relevant relationships with one another, as all p-values are below a .05 alpha value. This showing that changes on any one of these sections will cause changes in all other sections. Ultimately, I expected this result, as markets are all interconnected someway and it is not surprising to see connections between subsections of the same index. I was able to learn a lot through working on this project, such as data wrangling techniques, multi-data visualizations, and hypothesis testing. I hope this project can help inspire others to look at how COVID-19 has effected other stock indexes/subsections, and maybe eventually comparing across different indexes or top company stock data. 
+
+
+
